@@ -1,4 +1,4 @@
-![GeditPlugin](http://github.com/lenguaje-latino/Latino-Gedit-Plugin/raw/master/gedit-latino.png "GeditPlugin")
+![GeditPlugin](https://github.com/lenguaje-latino/Latino-Gedit-Plugin/blob/master/gedit-latino.png?raw=true "GeditPlugin")
 # Para Instalar
 Solo hay que agregar el archivo latino.lang a
 ##/usr/share/gtksourceview-%/language-specs
