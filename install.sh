@@ -1,5 +1,11 @@
+#!/bin/bash
+:<<LICENSIA
+	Plugin creado por Heliodoro Avila Donoso.
+	Script creado por Ricardo.
+LICENSIA
+
 declare -i n=0
-declare script="latino.lang" folder_
+declare name="latino.lang" folder_
 if [[ "$(echo `whoami`)" != "root" ]]; then printf "%s\n"  "Necesitas ser root para instalar este plugin."; exit; fi
 case `dpkg -s gedit | grep "Version:" | cut -d ":" -f2- | cut -d " " -f2 | cut -d '.' -f1` in
   4) n=4;;
@@ -7,15 +13,211 @@ case `dpkg -s gedit | grep "Version:" | cut -d ":" -f2- | cut -d " " -f2 | cut -
   2) n=2;;
   1) n=1;;
 esac
-if [[ ! $n ]]; then printf "%s\n" "Error al obtener versión."; exit; fi
+cat <<EOF > ${name}
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  Copyright (C) 2017 Heliodoro Avila Donoso <helioavil2545@gmail.com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details. See at <http://www.gnu.org/licenses/>.
+  
+  -->
+  
+  <!--
+  Éste programa es software libre: se puede redistribuir y/o modificar
+  bajo los terminos de la Licencia Publica General GNU como se encuentra
+  publicada por la Fundacion de Software Libre, en su version 3 de la
+  Licencia, o cualquier version porsterior.
+  Éste programa es distribuido con la esperanza de que sea de ayuda, pero
+  SIN NINGUNA GARANTIA; incluso sin la garantia implicita de COMERCIALIZACION
+  o APTITUD PARA UNA PROPUESTA PARTICULAR. para mas detalles ver la Lisencia 
+  Publica General. Ver en <http://www.gnu.org/licenses/>.
+  -->
+  
+ <language id="latino" _name="Latino" version="2.0" _section="Script">
+  <metadata>
+    <property name="mimetypes">text/x-c;text/x-csrc;image/x-xpixmap</property>
+    <property name="globs">*.lat</property>
+    <property name="line-comment-start">//</property>
+    <property name="block-comment-start">/*</property>
+    <property name="block-comment-end">*/</property>
+  </metadata>
+
+  <styles>
+    <style id="comment"           _name="Comment"               map-to="def:comment"/>
+    <style id="string"            _name="String"                map-to="def:string"/>
+    <style id="preprocessor"      _name="Preprocessor"          map-to="def:preprocessor"/>
+    <style id="included-file"     _name="Included File"         map-to="def:string"/>
+    <style id="char"              _name="Character"             map-to="def:character"/>
+    <style id="keyword"           _name="Keyword"               map-to="def:keyword"/>
+    <style id="operator"          _name="Operator"              map-to="def:operator"/>
+    <style id="storage-class"     _name="Storage Class"         map-to="def:type"/>
+    <style id="printf"            _name="printf Conversion"     map-to="def:special-char"/>
+    <style id="escaped-character" _name="Escaped Character"     map-to="def:special-char"/>
+    <style id="boolean"           _name="Boolean value"         map-to="def:boolean"/>
+  </styles>
+
+  <definitions>
+
+    <!--regexs-->
+    <define-regex id="preproc-start">^\s*#\s*</define-regex>
+    <define-regex id="escaped-character" extended="true">
+      \\(                   # leading backslash
+      [\\\"\'nrbtfav\?] |   # escaped character
+      [0-7]{1,3} |          # one, two, or three octal digits
+      x[0-9A-Fa-f]+         # 'x' followed by hex digits
+      )
+    </define-regex>
+
+    <!--contexts NOT used on the main context-->
+    <!-- TODO: what about scanf ? -->
+    <!-- man 3 printf -->
+    <context id="printf" style-ref="printf" extend-parent="false">
+      <match extended="true">
+        \%\%|\%
+        (?:[1-9][0-9]*\$)?      # argument
+        [#0\-\ \+\'I]*          # flags
+        (?:[1-9][0-9]*|\*)?     # width
+        (?:\.\-?(?:[0-9]+|\*))? # precision
+        (?:hh|ll|[hlLqjzt])?    # length modifier
+        [diouxXeEfFgGaAcsCSpnm] # conversion specifier
+      </match>
+    </context>
+
+    <!--contexts used on the main context-->
+    <!-- Preprocessor -->
+    <context id="if0-comment" style-ref="comment">
+      <start>\%{preproc-start}if\b\s*0\b</start>
+      <end>\%{preproc-start}(endif|else|elif)\b</end>
+      <include>
+        <context id="if-in-if0">
+          <start>\%{preproc-start}if(n?def)?\b</start>
+          <end>\%{preproc-start}endif\b</end>
+          <include>
+            <context ref="if-in-if0"/>
+            <context ref="def:in-comment"/>
+          </include>
+        </context>
+        <context ref="def:in-comment"/>
+      </include>
+    </context>
+
+    <context id="include" style-ref="preprocessor">
+      <match extended="true">
+        \%{preproc-start}
+        (incluir)\s*
+        (".*?"|&lt;.*&gt;)
+      </match>
+      <include>
+        <context id="included-file" sub-pattern="2" style-ref="included-file" class="path"/>
+      </include>
+    </context>
+
+    <context id="preprocessor" style-ref="preprocessor" end-at-line-end="true">
+      <start extended="true">
+        \%{preproc-start}
+        (define|undef|error|pragma|ident|if(n?def)?|else|elif|endif|line|warning)
+        \b
+      </start>
+      <include>
+        <context ref="def:line-continue" ignore-style="true"/>
+        <context ref="string" ignore-style="true"/>
+        <context ref="def:c-like-comment"/>
+        <context ref="def:c-like-comment-multiline"/>
+      </include>
+    </context>
+
+    <context id="string" style-ref="string" end-at-line-end="true" class="string" class-disabled="no-spell-check">
+      <start>L?"</start>
+      <end>"</end>
+      <include>
+        <context ref="printf"/>
+        <context id="escaped-character" style-ref="escaped-character">
+          <match>\%{escaped-character}</match>
+        </context>
+        <context ref="def:line-continue"/>
+      </include>
+    </context>
+
+    <context id="char" style-ref="char">
+      <match>L?'(\%{escaped-character}|.)'</match>
+    </context>
+
+    <context id="keywords" style-ref="keyword">
+      <keyword>si</keyword>
+      <keyword>sino</keyword>
+      <keyword>osi</keyword>
+      <keyword>fin</keyword>
+      <keyword>defecto</keyword>
+      <keyword>mientras</keyword>
+      <keyword>desde</keyword>
+      <keyword>elegir</keyword>
+      <keyword>caso</keyword>
+      <keyword>funcion</keyword>
+      <keyword>retorno</keyword>
+      <keyword>repetir</keyword>
+      <keyword>hasta</keyword>
+    </context>
+
+    <context id="operators" style-ref="operator">
+      <keyword>leer</keyword>
+      <keyword>escribir</keyword>
+    </context>
+
+
+    <context id="storage-class" style-ref="storage-class">
+      <keyword>archivo</keyword>
+      <keyword>mate</keyword>
+      <keyword>cadena</keyword>
+      <keyword>lista</keyword>
+    </context>
+
+    <!-- C99 booleans -->
+    <context id="boolean" style-ref="boolean">
+      <keyword>verdadero</keyword>
+      <keyword>falso</keyword>
+      <keyword>cierto</keyword>
+    </context>
+
+    <!--Main context-->
+    <context id="latino" class="no-spell-check">
+      <include>
+        <context ref="gtk-doc:inline-docs-section"/>
+        <context ref="def:c-like-comment" style-ref="comment"/>
+        <context ref="def:c-like-comment-multiline" style-ref="comment"/>
+        <context ref="def:c-like-close-comment-outside-comment" style-ref="comment"/>
+        <context ref="if0-comment"/>
+        <context ref="include"/>
+        <context ref="preprocessor"/>
+        <context ref="string"/>
+        <context ref="char"/>
+        <context ref="keywords"/>
+        <context ref="operators"/>
+        <context ref="storage-class"/>
+        <context ref="boolean"/>
+      </include>
+    </context>
+
+  </definitions>
+</language>
+EOF
+
 if [[ $n < 1 ]]; then printf "%s\n" "Error al obtener versión."; exit; fi
 folder_="/usr/share/gtksourceview-${n}.0/language-specs/"
 if [[ ! -d $folder_ ]]; then echo "Error al obtener carpeta de Gedit"; fi
-cp ${script} ${folder_}
+cp ${name} ${folder_}
 if [[ $? < 1 ]]; then
 	echo "Plugin instalado correctamente"
 else
 	printf "%s\n"\
 	"Error al copiar el archivo,"\
-	"¿El archivo ${script} existe?"
+	"¿El archivo ${name} existe?"
 fi
