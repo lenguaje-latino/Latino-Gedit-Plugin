@@ -20,7 +20,7 @@ fi
 if [[ $n < 1 ]]; then printf "%s\n" "Error al obtener versión."; exit; fi
 folder_="/usr/share/gtksourceview-${n}.0/language-specs/"
 if [[ ! -d $folder_ ]]; then echo "Error al obtener carpeta de Gedit"; fi
-cp ${name} ${folder_}
+mv ${name} ${folder_}
 if [[ $? < 1 ]]; then
 	echo "Plugin instalado correctamente"
 else
