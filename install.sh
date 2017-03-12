@@ -1,8 +1,8 @@
 #!/bin/bash
-:<<LICENSIA
+:<<LICENCIA
 	Plugin creado por Heliodoro Avila Donoso.
 	Script creado por Ricardo.
-LICENSIA
+LICENCIA
 
 declare -i n=0
 declare name="latino.lang" folder_
